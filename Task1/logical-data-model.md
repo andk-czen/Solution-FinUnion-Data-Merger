@@ -1,0 +1,1 @@
+Модель приведена в \diagrams\ER-entity.drawio и \diagrams\ER-entity.drawio.png

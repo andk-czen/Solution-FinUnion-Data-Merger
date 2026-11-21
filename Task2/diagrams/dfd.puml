@@ -1,0 +1,82 @@
+@startuml
+title DFD Level 0 — Промежуточное состояние
+left to right direction
+
+!theme plain
+
+skinparam rectangle {
+    BackgroundColor LightGray
+    BorderColor Black
+    FontSize 12
+    BorderColor Gray
+}
+skinparam entity {
+    BackgroundColor Black
+    BorderColor Black
+    FontSize 11
+}
+
+' Внешние сущности 
+rectangle "CRM FinUnion" as CRM_FU
+rectangle "CRM RetailBank" as CRM_RB
+rectangle "Core Banking FinUnion" as CORE_FU
+rectangle "Core Banking RetailBank" as CORE_RB
+rectangle "Card Processing FinUnion" as CARD_FU
+rectangle "Card Processing RetailBank" as CARD_RB
+rectangle "Loan System FinUnion" as LOAN_FU
+rectangle "Loan System RetailBank" as LOAN_RB
+
+rectangle "MDM Customer Hub" as MDM
+rectangle "Integration Layer" as INT
+rectangle "DWH" as DWH
+rectangle "BI" as BI
+rectangle "DataHub / Каталог данных" as DATAHUB
+rectangle "Регуляторная отчётность" as REG_REPORT
+
+' Связи и потоки данных с действиями
+CRM_FU --> INT : CRUD Client (онбординг)
+CRM_RB --> INT : CRUD Client (онбординг)
+CORE_FU --> INT : CRUD Account, Transaction
+CORE_RB --> INT : CRUD Account, Transaction
+CARD_FU --> INT : CRUD Card, Transactions
+CARD_RB --> INT : CRUD Card, Transactions
+LOAN_FU --> INT : CRUD Loan, Status
+LOAN_RB --> INT : CRUD Loan, Status
+
+INT --> MDM : Enrich & Validate Client (dedup, global_id)
+MDM --> INT : Return global_client_id, resolved identities
+
+INT --> CORE_FU : Sync enriched client IDs (Update)
+INT --> CORE_RB : Sync enriched client IDs (Update)
+
+INT --> DWH : Load raw + enriched data (Create/Aggregate)
+DWH --> BI : Provide aggregated data (Read)
+DWH --> REG_REPORT : Export for regulatory reporting (Extract)
+DWH --> DATAHUB : Publish metadata, lineage, SLA (Enrich)
+DATAHUB --> INT : Provide reference data, schemas (Read)
+DATAHUB --> DWH : Provide business glossary, tags (Read)
+
+note right of INT
+  Integration Layer:
+  - маршрутизация
+  - дедупликация по MDM
+  - обогащение
+  - CDC/ETL
+  - контроль качества
+end note
+
+note left of MDM
+  MDM Customer Hub:
+  - глобальные ID клиентов
+  - правила маппинга
+  - разрешение дублей
+end note
+
+note bottom of DWH
+  DWH:
+  - сырые и очищенные витрины
+  - агрегации
+  - история изменений
+  - подготовка для BI и регуляторики
+end note
+@enduml

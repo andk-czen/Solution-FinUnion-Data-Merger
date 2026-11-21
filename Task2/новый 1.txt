@@ -1,0 +1,124 @@
+@startuml
+title Целевая архитектура (через 12 месяцев)
+
+!theme plain
+
+skinparam rectangle {
+    BackgroundColor LightGray
+    BorderColor Black
+    FontSize 10
+    BorderColor Gray
+}
+skinparam entity {
+    BackgroundColor Black
+    BorderColor Black
+    FontSize 10
+}
+skinparam database {
+    BackgroundColor LightGray
+    BorderColor Black
+    FontSize 10
+    BorderColor Gray
+
+}
+
+package "Operational Systems (Core / CRM / Cards / Loans / Payment Hub)" as OPS <<oper>> {
+  rectangle "Core Banking\n(единая платформа)" as Core
+  rectangle "Card Platform" as Cards
+  rectangle "Lending Platform" as Loans
+  rectangle "Payment Hub" as PaymentHub
+  rectangle "Customer Case Platform" as CaseSys
+}
+
+rectangle "MDM\n(Customer Hub + Reference Data)" as MDM <<mdm>>
+
+package "Integration Layer" as INT <<integration>> {
+  rectangle "API Gateway /\nESB (sync, async)" as ESB
+  rectangle "CDC-коннекторы\n(Debezium)" as CDC
+}
+
+rectangle "Event Bus\n(Kafka)" as Kafka <<stream>>
+
+package "Аналитическая платформа" as ANALYTICS <<analytics>> {
+  database "DWH\n(регламентированная отчётность)" as DWH
+  rectangle "Data Lakehouse\n(Iceberg + Trino/Spark)" as Lakehouse
+  rectangle "Antifraud / Graph DB" as Graph
+  rectangle "Поисковый движок" as Search
+  database "Объектное хранилище\n(архив)" as ObjStore
+  rectangle "BI" as BI
+}
+
+package "Оркестрация и governance" as GOV <<governance>> {
+  rectangle "Airflow\n(batch-оркестрация)" as Airflow
+  rectangle "DataHub\n(каталог, lineage, владельцы)" as DataHub
+}
+
+rectangle "Регулятор" as Regulator <<external>>
+rectangle "Клиенты /\nмобильные и веб-каналы" as Channels <<external>>
+
+Channels --> OPS : операции, обращения
+OPS --> ESB : (1)
+OPS --> CDC : (2)
+CDC --> Kafka : (3)
+OPS --> Kafka : (4)
+
+ESB --> MDM : (5)
+MDM --> ESB : (6)
+ESB --> OPS : (7)
+
+Kafka --> Lakehouse : (8)
+Kafka --> Graph : (9)
+Kafka --> Search : (10)
+
+Airflow --> DWH : (11)
+OPS --> Airflow : (12)
+Lakehouse --> Airflow : (13)
+Airflow --> ObjStore : (14)
+
+DWH --> BI : (15)
+Lakehouse --> BI : (16)
+DWH --> Regulator : (17)
+
+MDM --> DataHub : (18)
+DWH --> DataHub : (19)
+Lakehouse --> DataHub : (20)
+Airflow --> DataHub : lineage пайплайнов
+
+note right of MDM
+  Единственная система, где хранятся
+  золотые записи Клиента и справочников
+  (Продукт, Тариф, Отделение, Контрагент)
+end note
+
+note left of DWH
+  Iceberg-таблицы поверх объектного
+  хранилища; Trino — движок для
+  ad-hoc SQL и федеративных запросов
+  DWH + Lakehouse
+end note
+
+legend 
+(1) синхронные запросы\n(проверка клиента, баланс)
+(2) изменения записей\n(row-level changes)
+(3) события изменений\n(CDC-топики)
+(4) бизнес-события\n(транзакция, платёж, кейс)
+(5) Read/Write клиентских\nи справочных данных
+(6) golden record\n(client_id, продукт, тариф)
+(7) публикация эталонных\nданных
+(8) streaming запись\n(Iceberg-таблицы)
+(9) обогащение графа\nсвязей в реальном времени
+(10) индексация обращений
+(11) batch-загрузка\nи трансформации (dbt)
+(12) выгрузки для DWH\n(регламентные, ночные)
+(13) агрегация в DWH\n(витрины)
+(14) архивация\nзакрытых записей
+(15) регламентированные\nвитрины
+(16) ad-hoc аналитика\n(через Trino)
+(17) регуляторная\nотчётность
+(18) метаданные\nи владельцы
+(19) lineage
+(20) lineage
+end legend
+
+
+@enduml
