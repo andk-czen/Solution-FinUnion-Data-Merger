@@ -1,8 +1,6 @@
 # Образ целевого результата -  что именно должно измениться за 12 месяцев
 
 ## Какие системы остаются 
-- Core Banking (RB и FU)-как мастер‑системы по счетам/транзакциям; 
-- CRM (RB и FU)-для клиентских операций;
 - MDM-единый источник истины по клиентам и справочникам;
 - Kafka-событийная шина; 
 - DWH - витрины для BI; 
@@ -10,6 +8,7 @@
 - Airflow + dbt-оркестрация и трансформации; 
 - DataHub-каталог, lineage, владельцы; 
 - BI;
+- Target Core Banking - как мастер‑системы по счетам/транзакциям и договорам, образовалась из FU Core; 
 - Target Card Platform (из FU Cards);
 - Target Lending Platform (из FU Loans);
 - Payment Hub; 
@@ -17,6 +16,9 @@
 - Integration Layer.
 
 ## Какие выводятся из эксплуатации
+- RB CRM (замена: MDM + Target Core)
+- RB Core (замена: Target Core)
+- RB Cards (замена: Target Card Platform)
 - RB Loans (портфель — в Target Lending Platform);
 - RB DWH (заменён единым DWH);
 - RB BI (заменён единым BI);
