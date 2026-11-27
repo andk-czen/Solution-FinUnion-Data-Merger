@@ -3,7 +3,7 @@
 
 | Пайплайн | Источник | Приёмник | Тип | Инструменты |
 |---|---|---|---|---|
-| Регламентированная отчётность DWH (промежуточное состояние, 3 мес.) - *простой пайплайн для DWH на PostgreSQL*| FU Core, RB Core | DWH на PostgreSQL | Batch ETL, ночной | Airflow, SQL-скрипты / dbt, PostgreSQL `COPY`/FDW |
+| Регламентированная отчётность DWH (промежуточное состояние, 3 мес.) - *простой пайплайн для DWH на PostgreSQL*| FU Core, RB Core | DWH на PostgreSQL | Batch ETL, по согласованному расписанию. Расписание устанавливается исходя из замеренной продолжительности выполнения потока. Предварительно - ночной - стартует в 23:00 с возможностью переноса на другое время (утро, день) при выявленной необходимости высокой свежести данных. | Airflow, SQL-скрипты / dbt, PostgreSQL `COPY`/FDW |
 | Потоковая загрузка транзакций в Lakehouse | FU Core/Cards, RB Core/Cards (через Kafka) | Data Lakehouse (Iceberg) | Streaming / CDC | Debezium, Kafka, Spark Structured Streaming, Apache Iceberg |
 | Кредитный портфель для риск-отчётности | FU Loans, RB Loans | DWH | Batch ETL, ежедневный | Airflow, dbt |
 | Обращения клиентов в поисковый индекс | Contact Center / Case-система | Поисковый движок | Near real-time ETL | Kafka Connect, индексатор (OpenSearch/Elasticsearch) |
